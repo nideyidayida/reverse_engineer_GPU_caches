@@ -14,16 +14,25 @@
 #include <stdlib.h>
 #include <time.h>
 
-__global__ void pChaseKernel(unsigned int * array_d, float * timeRecords_d, int iterations) {
-  __shared__ unsigned int s_tvalue[];
-  __shared__ unsigned int s_indexp[];
+__global__ void pChaseKernel(unsigned int * array_d, unsigned int * indexRecords_d,
+    unsigned int * timeRecords_d, int iterations) {
+  extern __shared__ unsigned int s_index[];
+  extern __shared__ unsigned int s_tvalue[];
 
-  for (i = 0; i < iterations; i++) {
-    clock_t start_time = clock();
-    unsigned int j = array_d[j];
+  clock_t start_time;
+  clock_t end_time;
+  unsigned int j = 0;
+  for (int i = 0; i < iterations; i++) {
+    start_time = clock();
+    j = array_d[j];
     s_index[i] = j;
-    clock_t end_time = clock();
-    s_tvalue[i] = (end_time - start_time) / CLOCKS_PER_SEC;
+    end_time = clock();
+    s_tvalue[i] = end_time - start_time;
+  }
+  
+  for (int i = 0; i < iterations; i++) {
+    indexRecords_d[i] = s_index[i];
+    timeRecords_d[i] = s_tvalue[i];
   }
 }
 
@@ -33,11 +42,11 @@ int main(int argc, char * argv[]) {
     exit(1);
   }
 
-  int arraySize = argv[1];
-  int iterations = argv[2];
-  int stride = argv[3];
+  const int arraySize = atoi(argv[1]);
+  const int iterations = atoi(argv[2]);
+  const int stride = atoi(argv[3]);
 
-  unsigned int * array = calloc(arraySize, sizeof(unsigned int));
+  unsigned int * array = (unsigned int*)calloc(arraySize, sizeof(unsigned int));
   for (int i = 0; i < arraySize; i++) {
     array[i] = (i + stride) % arraySize;
   }
@@ -45,23 +54,26 @@ int main(int argc, char * argv[]) {
   unsigned int * array_d;
   cudaMalloc((void**)&array_d, arraySize * sizeof(unsigned int));
   cudaMemcpy(array_d, array, arraySize * sizeof(unsigned int), cudaMemcpyHostToDevice);
-  float * timeRecords_d;
-  cudaMalloc((void**)&timeRecords_d, iterations * sizeof(float));
+  unsigned int * indexRecords_d;
+  cudaMalloc((void**)&indexRecords_d, iterations * sizeof(unsigned int));
+  unsigned int * timeRecords_d;
+  cudaMalloc((void**)&timeRecords_d, iterations * sizeof(unsigned int));
 
-  // Luanch only 1 thread each time.
+  // Luanch only 1 thread per experiment.
   dim3 blockDim(1);
   dim3 gridDim(1);
-  pChaseKernel<<<gridDim, blockDim>>>(array_d, timeRecords_d, iterations);
+  pChaseKernel<<<gridDim, blockDim>>>(array_d, indexRecords_d, timeRecords_d, iterations);
 
-  float * timeRecords = calloc(iterations, sizeof(float));
-  cudaMemcpy(timeRecords, timeRecords_d, iterations * sizeof(float), cudaMemcpyDeviceToHost);
+  unsigned int * indexRecords = (unsigned int*)calloc(iterations, sizeof(unsigned int));
+  cudaMemcpy(indexRecords, indexRecords_d, iterations * sizeof(unsigned int),
+      cudaMemcpyDeviceToHost);
+  unsigned int * timeRecords = (unsigned int*)calloc(iterations, sizeof(unsigned int));
+  cudaMemcpy(timeRecords, timeRecords_d, iterations * sizeof(unsigned int), cudaMemcpyDeviceToHost);
 
-  printf("====== P Chase ======\n
-      arraySize: %d\n
-      iterations: %d\n
-      stride: %d\n",
-      arraySize, iterations, stride);
+  printf("arraySize: %d  iterations: %d  stride: %d\n", arraySize, iterations, stride);
+  printf("=========================================\n");
+  printf("#iteration: index visited | access latency\n");
   for (int i = 0; i < iterations; i++) {
-    printf("time of iteration %d: %d\n", i, timeRecords[i]);
+    printf("%d: %d | %d\n", i, indexRecords[i], timeRecords[i]);
   }
 }
