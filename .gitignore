@@ -1,2 +1,4 @@
 # ignore files without an extension (no dot in file name).
+*
+!/**/
 !*.*
