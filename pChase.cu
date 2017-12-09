@@ -3,6 +3,7 @@
  *   Reverse engineering the memory hierarchy of a GPU.
  *
  * Compile with: nvcc -o pChase pChase.cu
+ * Compile with L1 cache disabled: nvcc -Xptxas -dlcm=cg -o pChase pChase.cu
  * Run with: ./benchmark
  *
  * Author: Yida Xu, Rihan Yang
@@ -85,7 +86,7 @@ int main(int argc, char * argv[]) {
   unsigned int * timeRecords_d;
   cudaMalloc((void**)&timeRecords_d, iterations * UNSIGNED_INT_SIZE);
 
-  // Luanch only 1 thread per experiment.
+  // Launch only 1 thread per experiment.
   pChaseKernel<<<1, 1>>>(array_d, indexRecords_d, timeRecords_d, iterations);
 
   unsigned int * indexRecords = (unsigned int*)calloc(iterations, UNSIGNED_INT_SIZE);
