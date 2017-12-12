@@ -1,4 +1,6 @@
 # ignore files without an extension (no dot in file name).
-*
+pChase
+pChase_noL1
+devicequery
 !/**/
 !*.*

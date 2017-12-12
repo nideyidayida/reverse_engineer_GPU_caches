@@ -1,6 +1,8 @@
 # GPUProject
 Reverse engineering the memory hierarchy of a GPU.
 
-Use nvcc pChase pChase.cu to compile.
+Use `nvcc pChase pChase.cu` to compile.
 
-Use nvcc -Xptxas -dlcm=cg -o pChase pChase.cu to compile with L1 cache disabled.
+Use `nvcc -Xptxas -dlcm=cg -o pChase pChase.cu` to compile with L1 cache disabled.
+
+Alternatively, use `make` to compile both of them.
