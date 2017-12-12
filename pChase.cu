@@ -18,9 +18,9 @@
 #define EMPTY_LINE "\n"
 #define ERROR_MESSAGE \
     "usage: ./pChase <arraySize(KB)> <iterations> <strideSize(B)>\n\
-arraySize: KB, arraySize * 256 % 1 = 0\n\
+arraySize: KB, arraySize * 256 %% 1 = 0\n\
 iterations: number of iterations.\n\
-strideSize: Byte, strideSize % 4 = 0\n"
+strideSize: Byte, strideSize %% 4 = 0\n"
 #define OUTPUT_FORMAT "%d: %d | %d\n"
 #define OUTPUT_TITLE "\
 Input: arraySize: %.2fKB  iterations: %d  strideSize: %dB\n\
